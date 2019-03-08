@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.springframework.test.web.servlet.samples.spr;
 
 import org.junit.Test;
@@ -22,23 +23,23 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.filter.HttpPutFormContentFilter;
+import org.springframework.web.filter.FormContentFilter;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Test for issues related to form content.
+ *
  * @author Rossen Stoyanchev
  */
 public class FormContentTests {
-
 
 	@Test // SPR-15753
 	public void formContentIsNotDuplicated() throws Exception {
 
 		MockMvc mockMvc = MockMvcBuilders.standaloneSetup(new Spr15753Controller())
-				.addFilter(new HttpPutFormContentFilter())
+				.addFilter(new FormContentFilter())
 				.build();
 
 		mockMvc.perform(put("/").content("d1=a&d2=s").contentType(MediaType.APPLICATION_FORM_URLENCODED))
@@ -55,6 +56,7 @@ public class FormContentTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static class Data {
 
 		private String d1;
@@ -80,4 +82,5 @@ public class FormContentTests {
 			this.d2 = d2;
 		}
 	}
+
 }

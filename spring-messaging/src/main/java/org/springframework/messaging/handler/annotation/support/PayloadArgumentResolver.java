@@ -55,6 +55,7 @@ public class PayloadArgumentResolver implements HandlerMethodArgumentResolver {
 
 	private final MessageConverter converter;
 
+	@Nullable
 	private final Validator validator;
 
 	private final boolean useDefaultResolution;
@@ -76,7 +77,7 @@ public class PayloadArgumentResolver implements HandlerMethodArgumentResolver {
 	 * @param messageConverter the MessageConverter to use (required)
 	 * @param validator the Validator to use (optional)
 	 */
-	public PayloadArgumentResolver(MessageConverter messageConverter, Validator validator) {
+	public PayloadArgumentResolver(MessageConverter messageConverter, @Nullable Validator validator) {
 		this(messageConverter, validator, true);
 	}
 
@@ -89,7 +90,7 @@ public class PayloadArgumentResolver implements HandlerMethodArgumentResolver {
 	 * all parameters; if "false" then only arguments with the {@code @Payload}
 	 * annotation are supported.
 	 */
-	public PayloadArgumentResolver(MessageConverter messageConverter, Validator validator,
+	public PayloadArgumentResolver(MessageConverter messageConverter, @Nullable Validator validator,
 			boolean useDefaultResolution) {
 
 		Assert.notNull(messageConverter, "MessageConverter must not be null");
@@ -105,6 +106,7 @@ public class PayloadArgumentResolver implements HandlerMethodArgumentResolver {
 	}
 
 	@Override
+	@Nullable
 	public Object resolveArgument(MethodParameter parameter, Message<?> message) throws Exception {
 		Payload ann = parameter.getParameterAnnotation(Payload.class);
 		if (ann != null && StringUtils.hasText(ann.expression())) {

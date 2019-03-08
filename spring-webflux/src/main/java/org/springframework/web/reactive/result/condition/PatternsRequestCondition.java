@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2017 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.springframework.web.reactive.result.condition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -27,7 +26,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import org.springframework.http.server.reactive.PathContainer;
+import org.springframework.http.server.PathContainer;
 import org.springframework.lang.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
@@ -57,24 +56,12 @@ public final class PatternsRequestCondition extends AbstractRequestCondition<Pat
 	 * Creates a new instance with the given {@code Stream} of URL patterns.
 	 */
 	public PatternsRequestCondition(List<PathPattern> patterns) {
-		this(toSortedSet(patterns));
+		this(new TreeSet<>(patterns));
 	}
 
-	private static SortedSet<PathPattern> toSortedSet(Collection<PathPattern> patterns) {
-		TreeSet<PathPattern> sorted = new TreeSet<>(getPatternComparator());
-		sorted.addAll(patterns);
-		return sorted;
-	}
 
 	private PatternsRequestCondition(SortedSet<PathPattern> patterns) {
 		this.patterns = patterns;
-	}
-
-	private static Comparator<PathPattern> getPatternComparator() {
-		return (p1, p2) -> {
-			int index = p1.compareTo(p2);
-			return (index != 0 ? index : p1.getPatternString().compareTo(p2.getPatternString()));
-		};
 	}
 
 	public Set<PathPattern> getPatterns() {
@@ -135,8 +122,7 @@ public final class PatternsRequestCondition extends AbstractRequestCondition<Pat
 			return this;
 		}
 		SortedSet<PathPattern> matches = getMatchingPatterns(exchange);
-		return matches.isEmpty() ? null :
-				new PatternsRequestCondition(matches);
+		return (!matches.isEmpty() ? new PatternsRequestCondition(matches) : null);
 	}
 
 	/**
@@ -150,7 +136,7 @@ public final class PatternsRequestCondition extends AbstractRequestCondition<Pat
 	 */
 	private SortedSet<PathPattern> getMatchingPatterns(ServerWebExchange exchange) {
 		PathContainer lookupPath = exchange.getRequest().getPath().pathWithinApplication();
-		return patterns.stream()
+		return this.patterns.stream()
 				.filter(pattern -> pattern.matches(lookupPath))
 				.collect(Collectors.toCollection(TreeSet::new));
 	}
@@ -170,7 +156,7 @@ public final class PatternsRequestCondition extends AbstractRequestCondition<Pat
 		Iterator<PathPattern> iterator = this.patterns.iterator();
 		Iterator<PathPattern> iteratorOther = other.getPatterns().iterator();
 		while (iterator.hasNext() && iteratorOther.hasNext()) {
-			int result = iterator.next().compareTo(iteratorOther.next());
+			int result = PathPattern.SPECIFICITY_COMPARATOR.compare(iterator.next(), iteratorOther.next());
 			if (result != 0) {
 				return result;
 			}
